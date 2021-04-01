@@ -78,7 +78,7 @@ int main() {
 	const int N = int(1E8);
 
 	// problem data
-	const int NumThreads = 4;
+	const int NumThreads = 8;
 	double m = 0;
 
 	double a = -2;
