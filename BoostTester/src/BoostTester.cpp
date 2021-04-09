@@ -1,6 +1,9 @@
 //============================================================================
-// Name        : jvel0131-AssignmentPart1
+// Name        : BoostTester.cpp
 // Author      : Jacques Vella Critien
+// Version     :
+// Copyright   : Your copyright notice
+// Description : Hello World in C++, Ansi-style
 //============================================================================
 
 #include <iostream>
@@ -11,7 +14,6 @@ using namespace std;
 #include <sstream>
 #include "jbutil.h"
 
-//recursive function
 double s(int col, boost::multi_array<double, 1> arr){
 
 	if(col == 0)
@@ -51,8 +53,7 @@ bool isNumber(string number)
 
 
 int main (int argc, char *argv[]) {
-
-	//check that a filename was passed
+	//check that enough arguments are passed or arguments are not numbers
 	if(argc < 2 ){
 		cout << "Please pass in a filename" << endl;
 		return 1;
@@ -97,7 +98,7 @@ int main (int argc, char *argv[]) {
 	//init boost array
 	typedef boost::multi_array<double, 2> array_type;
 	array_type A(boost::extents[rows][cols]);
-	array_type ii(boost::extents[rows][cols]);
+	array_type ii(boost::extents[rows+1][cols]);
 
 	//read every line
 	int row_counter =0;
@@ -114,6 +115,9 @@ int main (int argc, char *argv[]) {
 				return 1;
 			}
 
+			if(row_counter == 0){
+				ii[0][col_counter] = 0;
+			}
 			A[row_counter][col_counter] = stof(arg);
 			col_counter++;
 		}
@@ -135,21 +139,28 @@ int main (int argc, char *argv[]) {
 	// start timer
 	double t = jbutil::gettime();
 
-
-	//calcualte integral image values
-	for(int row=0; row < rows; row++){
+	//perform calculation
+	for(int row=1; row <= rows; row++){
 		for(int col=0; col < cols; col++){
-			double sum = s(col, A[row]);
-			ii[row][col] = (row == 0) ? sum : ii[row-1][col] + sum;
+			double sum = s(col, A[row-1]);
+			ii[row][col] = ii[row-1][col] + sum;
 		}
 	}
+
+
+//	for(int row=0; row < rows; row++){
+//			for(int col=0; col < cols; col++){
+//				double sum = s(col, A[row]);
+//				ii[row][col] = (row == 0) ? sum : ii[row-1][col] + sum;
+//			}
+//		}
 
 	// stop timer
 	t = jbutil::gettime() - t;
 
 	//print output
 	cout << "OUTPUT" << endl;
-	for(int row = 0; row < rows; row++){
+	for(int row = 1; row <= rows; row++){
 		for(int col = 0; col < cols; col++){
 			cout << ii[row][col] << " ";
 		}
