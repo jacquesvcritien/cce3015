@@ -6,7 +6,7 @@ __global__ void MatAdd(int n, float *c, const float *a, const float *b, int pitc
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	int ij = i * pitch + j;
 	if(i < n && j < n)
-	c[ij] = a[ij] + b[ij];
+		c[ij] = a[ij] + b[ij];
 }
 
 int main()
@@ -22,6 +22,8 @@ int main()
 		}
 	}
 
+	printf("Filled arrays");
+
 	const int rowsize = n * sizeof(float);
 	float *dc, *da, *db;
 
@@ -30,10 +32,14 @@ int main()
 	cudaMallocPitch((void**)&db, &pitch, rowsize, n);
 	cudaMallocPitch((void**)&dc, &pitch, rowsize, n);
 
+
+	printf("Malloc done");
+
 	// Copy over input from host to device
 	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, n, cudaMemcpyHostToDevice);
 	cudaMemcpy2D(db, pitch, b, rowsize, rowsize, n, cudaMemcpyHostToDevice);
 
+	printf("Copied to device");
 
 	dim3 blocksize(16, 16);
 	dim3 gridsize((n + blocksize.x - 1) / blocksize.x, (n + blocksize.y - 1) / blocksize.y);
@@ -49,3 +55,4 @@ int main()
 	cudaFree(dc);
 
 }
+
