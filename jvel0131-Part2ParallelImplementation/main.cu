@@ -1,4 +1,5 @@
 #include <cassert>
+#include "stdio.h"
 
 __global__ void VecAdd(int n, float *ii, const float *a, int cols)
 {
@@ -45,6 +46,14 @@ int main()
 
 	// Copy over output from device to host
 	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, n, cudaMemcpyDeviceToHost);
+
+	 for(int i=0; i < n;i++){
+                for(int j=0; j < n;j++){
+                        printf("%f ", ii[i][j]);
+                }
+                printf("\n");
+        }
+
 	// Free device memory
 	cudaFree(da);
 	cudaFree(dii);
