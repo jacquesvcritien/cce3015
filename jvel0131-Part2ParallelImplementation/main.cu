@@ -1,54 +1,92 @@
+
+
 #include <cassert>
 #include "stdio.h"
 
-__global__ void VecAdd(int n, float *ii, const float *a, int cols)
+__global__ void VecAdd(int rows, int cols, float *ii, const float *a, int pitch)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	if(i < n){
-		for(int j=0; j < 3; j++){
-			int index = i * cols + j;
-			ii[index] = a[index];
+	if(i < rows){
+		for(int j=0; j < cols; j++){
+			int index = i * pitch + j;
+			float prev_val = (j==0) ? 0 : ii[index-1];
+			ii[index] = prev_val + a[index];
 		}
 	}
+
+	__syncthreads();
+
+
+	if(i < cols){
+                for(int j=0; j < rows; j++){
+                        int index = j * pitch + i;
+                        int prev_index = (j-1) * pitch + i;
+                        float prev_val = (j==0) ? 0 : ii[prev_index];
+                        ii[index] = prev_val + ii[index];
+                }
+        }
+}
+
+__global__ void VecAdd2(int n, float *ii, const float *a, int cols)
+{
+        int i = blockIdx.x * blockDim.x + threadIdx.x;
+        if(i < n){
+                for(int j=0; j < 3; j++){
+                        int index = j * cols + i;
+			int prev_index = (j-1) * cols + i;
+			float prev_val = (j==0) ? 0 : ii[prev_index];
+                        ii[index] = prev_val + a[index];
+                }
+        }
 }
 
 int main()
 {
-	const int n = 3;
-	float a[n][n], ii[n][n];
+	const int rows = 3;
+	const int cols = 4;
+	float a[rows][cols], ii[rows][cols];
 
-	for(int i=0; i < n; i++){
-		for(int j=0; j < n; j++){
-			a[i][j] = i;
-			ii[i][j] = 0;
+	for(int i=0; i < cols; i++){
+		for(int j=0; j < rows; j++){
+			a[j][i] = i+1;
+			ii[j][i] = 0;
 		}
 	}
 
-	const int rowsize = n * sizeof(float);
+	printf("INPUT\n");
+	 for(int i=0; i < rows;i++){
+                for(int j=0; j < cols;j++){
+                        printf("%f ", a[i][j]);
+                }
+                printf("\n");
+        }
+
+	const int rowsize = cols * sizeof(float);
 	float *da, *dii;
 
 	size_t pitch;
-	cudaMallocPitch((void**)&da, &pitch, rowsize, n);
-	cudaMallocPitch((void**)&dii, &pitch, rowsize, n);
+	cudaMallocPitch((void**)&da, &pitch, rowsize, rows);
+	cudaMallocPitch((void**)&dii, &pitch, rowsize, rows);
 
 	// Copy over input from host to device
-	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, n, cudaMemcpyHostToDevice);
-	cudaMemcpy2D(dii, pitch, ii, rowsize, rowsize, n, cudaMemcpyHostToDevice);
+	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
+	cudaMemcpy2D(dii, pitch, ii, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
 
-//	dim3 blocksize(16, 16);
-//	dim3 gridsize((n + blocksize.x - 1) / blocksize.x, (n + blocksize.y - 1) / blocksize.y);
-//	assert(pitch % sizeof(float) == 0);
-//	const int ipitch = pitch / sizeof(float);
-//	MatAdd<<<gridsize, blocksize>>>(n, dc, da, db, ipitch);
+	const int nblocks = (rows + 63) / 64;
+	assert(pitch % sizeof(float) == 0);
+	const int ipitch = pitch / sizeof(float);
+	VecAdd<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
 
-	const int nblocks = (n + 63) / 64;
-	VecAdd<<<nblocks, 64>>>(n, dii, da, 3);
+	//__syncthreads();
+
+        //VecAdd2<<<nblocks, 64>>>(n, dii, da, ipitch);
 
 	// Copy over output from device to host
-	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, n, cudaMemcpyDeviceToHost);
+	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, rows, cudaMemcpyDeviceToHost);
 
-	 for(int i=0; i < n;i++){
-                for(int j=0; j < n;j++){
+	printf("\nOUTPUT\n");
+	 for(int i=0; i < rows;i++){
+                for(int j=0; j < cols;j++){
                         printf("%f ", ii[i][j]);
                 }
                 printf("\n");
