@@ -27,22 +27,9 @@ __global__ void VecAdd(int rows, int cols, float *ii, const float *a, int pitch)
         }
 }
 
-__global__ void VecAdd2(int n, float *ii, const float *a, int cols)
-{
-        int i = blockIdx.x * blockDim.x + threadIdx.x;
-        if(i < n){
-                for(int j=0; j < 3; j++){
-                        int index = j * cols + i;
-			int prev_index = (j-1) * cols + i;
-			float prev_val = (j==0) ? 0 : ii[prev_index];
-                        ii[index] = prev_val + a[index];
-                }
-        }
-}
-
 int main()
 {
-	const int rows = 3;
+	const int rows = 4;
 	const int cols = 4;
 	float a[rows][cols], ii[rows][cols];
 
@@ -72,14 +59,11 @@ int main()
 	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
 	cudaMemcpy2D(dii, pitch, ii, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
 
-	const int nblocks = (rows + 63) / 64;
+	int threadsInBlocks = 64;
+	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	assert(pitch % sizeof(float) == 0);
 	const int ipitch = pitch / sizeof(float);
 	VecAdd<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
-
-	//__syncthreads();
-
-        //VecAdd2<<<nblocks, 64>>>(n, dii, da, ipitch);
 
 	// Copy over output from device to host
 	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, rows, cudaMemcpyDeviceToHost);
