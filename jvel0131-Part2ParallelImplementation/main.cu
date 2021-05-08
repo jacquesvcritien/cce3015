@@ -5,6 +5,33 @@ using namespace std;
 #include <sstream>
 #include "stdio.h"
 #include "jbutil.h"
+#include <ctime>
+
+void saveOutput(float **ii, int rows, int cols){
+
+	time_t now = time(0);
+	tm *ltm = localtime(&now);
+
+	string year = to_string(1900 + ltm->tm_year);
+	string month = to_string(1+ltm->tm_mon);
+	string day = to_string(ltm->tm_mday);
+	string time = to_string(ltm->tm_hour)+":"+to_string(ltm->tm_min)+":"+to_string(ltm->tm_sec);
+
+	ofstream outputFile;
+	string filename = "outputs/output_"+year+"-"+month+"-"+day+"_"+time+".txt";
+	outputFile.open(filename);
+
+	for(size_t row = 0; row < rows; row++){
+		for(size_t col = 0; col < cols; col++){
+			outputFile << ii[row][col] << " ";
+		}
+		outputFile << endl;
+	}
+
+	cout << "Result written to file" << endl;
+
+	outputFile.close();
+}
 
 //function to check if a string is a number
 bool isNumber(string number)
@@ -186,6 +213,14 @@ int main(int argc, char *argv[])
         }
 
 	printf("Time taken: %fs\n", t);
+
+	float* iiPtrs[rows];
+	for (int i = 0; i < rows; ++i)
+		iiPtrs[i] = ii[i];
+
+	float** iiToPrint = iiPtrs;
+
+	saveOutput(iiToPrint, rows, cols);
 
 	// Free device memory
 	cudaFree(da);
