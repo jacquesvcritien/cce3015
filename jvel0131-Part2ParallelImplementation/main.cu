@@ -5,21 +5,12 @@ using namespace std;
 #include <sstream>
 #include "stdio.h"
 #include "jbutil.h"
-#include <ctime>
 
-void saveOutput(float **ii, int rows, int cols){
-
-	time_t now = time(0);
-	tm *ltm = localtime(&now);
-
-	string year = to_string(1900 + ltm->tm_year);
-	string month = to_string(1+ltm->tm_mon);
-	string day = to_string(ltm->tm_mday);
-	string time = to_string(ltm->tm_hour)+":"+to_string(ltm->tm_min)+":"+to_string(ltm->tm_sec);
+void saveOutput(float **ii, int rows, int cols, string filename){
 
 	ofstream outputFile;
-	string filename = "outputs/output_"+year+"-"+month+"-"+day+"_"+time+".txt";
-	outputFile.open(filename);
+	string filename_to_save = "outputs/output_"+filename;
+	outputFile.open(filename_to_save);
 
 	for(size_t row = 0; row < rows; row++){
 		for(size_t col = 0; col < cols; col++){
@@ -61,8 +52,6 @@ bool isNumber(string number)
     }
     return true;
 }
-
-
 
 __global__ void calculateColumnSums(int rows, int cols, float *ii, const float *a, int pitch)
 {
@@ -198,7 +187,6 @@ int main(int argc, char *argv[])
 	assert(pitch % sizeof(float) == 0);
 	const int ipitch = pitch / sizeof(float);
 	calculateColumnSums<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
-
 	calculateRowSums<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
 
 	// Copy over output from device to host
@@ -207,13 +195,14 @@ int main(int argc, char *argv[])
 	// stop timer
 	t = jbutil::gettime() - t;
 
+	/*
 	printf("\nOUTPUT\n");
 	 for(int i=0; i < rows;i++){
                 for(int j=0; j < cols;j++){
                         printf("%f ", ii[i][j]);
                 }
                 printf("\n");
-        }
+        }*/
 
 	printf("Time taken: %fs\n", t);
 
@@ -223,7 +212,7 @@ int main(int argc, char *argv[])
 
 	float** iiToPrint = iiPtrs;
 
-	saveOutput(iiToPrint, rows, cols);
+	saveOutput(iiToPrint, rows, cols, filename);
 
 	// Free device memory
 	cudaFree(da);
