@@ -11,8 +11,8 @@ using namespace std;
 #include "boost/multi_array.hpp"
 #include <fstream>
 int main() {
-	int rows = 70;
-	int cols = 70;
+	int rows = 100;
+	int cols = 100;
 
 	//init array
 //	double *arr[rows];
