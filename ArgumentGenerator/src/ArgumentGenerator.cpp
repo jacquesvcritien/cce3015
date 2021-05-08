@@ -11,8 +11,8 @@ using namespace std;
 #include "boost/multi_array.hpp"
 #include <fstream>
 int main() {
-	int rows = 100;
-	int cols = 200;
+	int rows = 70;
+	int cols = 70;
 
 	//init array
 //	double *arr[rows];
@@ -52,22 +52,22 @@ int main() {
 
 	cout << ']' << endl;
 
-//	ofstream myfile;
-//	string filename = "example"+to_string(rows)+"x"+to_string(cols)+".txt";
-//	myfile.open(filename);
-//
-//
-//	myfile << rows << " " << cols << endl;
-//	for(int row = 0; row < rows; row++){
-//		for(int col = 0; col < cols; col++){
-//			myfile << A[row][col] << " ";
-//		}
-//		myfile << endl;
-//	}
-//
-//	cout << "File created" << endl;
+	ofstream myfile;
+	string filename = "example"+to_string(rows)+"x"+to_string(cols)+".txt";
+	myfile.open(filename);
 
-//	  myfile.close();
+
+	myfile << rows << " " << cols << endl;
+	for(int row = 0; row < rows; row++){
+		for(int col = 0; col < cols; col++){
+			myfile << A[row][col] << " ";
+		}
+		myfile << endl;
+	}
+
+	cout << "File created" << endl;
+
+	  myfile.close();
 	  return 0;
 
 }
