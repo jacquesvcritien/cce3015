@@ -1,9 +1,11 @@
 
 
 #include <cassert>
+#include <fstream>
+#include <sstream>
 #include "stdio.h"
 
-__global__ void VecAdd(int rows, int cols, float *ii, const float *a, int pitch)
+__global__ void calculateIntegralImage(int rows, int cols, float *ii, const float *a, int pitch)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < rows){
@@ -27,11 +29,87 @@ __global__ void VecAdd(int rows, int cols, float *ii, const float *a, int pitch)
         }
 }
 
-int main()
+int main(int argc, char *argv[])
 {
-	const int rows = 4;
-	const int cols = 4;
+	//check that file was passed
+	if(argc < 2 ){
+		cout << "Please pass in a filename" << endl;
+		return 1;
+	}
+
+	//get filename
+	string filename = argv[1];
+	//open file
+	ifstream file (filename);
+
+	//if not open
+	if (!file.is_open())
+	{
+		cout << "File not found" << endl;
+		return 1;
+	}
+
+	string line;
+	//read first line
+	getline (file,line);
+
+	//read word by word in line
+	istringstream iss(line);
+	string arg;
+
+	//get rows
+	iss >> arg;
+	if(!isNumber(arg)){
+		cout << "Rows must be a correct number" << endl;
+		return 1;
+	}
+	int const rows = stoi(arg);
+
+	//get cols
+	iss >> arg;
+	if(!isNumber(arg)){
+		cout << "Columns must be a correct number" << endl;
+		return 1;
+	}
+	int const cols = stoi(arg);
+
+
 	float a[rows][cols], ii[rows][cols];
+
+	//read every line
+	int row_counter =0;
+	while ( getline (file,line) )
+	{
+		istringstream iss(line);
+		int col_counter =0;
+		//read every value in each line
+		while(iss >> arg)
+		{
+			// check if passed value is number
+			if(!isNumber(arg)){
+				cout << "Cell values must be valid numbers" << endl;
+				return 1;
+			}
+
+			a[row_counter][col_counter] = stof(arg);
+			ii[row_counter][col_counter] = 0;
+			col_counter++;
+		}
+
+		//if not enough cols
+		if(col_counter != cols){
+			cout << "Not all cell values were specified - columns" << endl;
+			return 1;
+		}
+		row_counter++;
+	}
+
+	//if not enough rows
+	if(row_counter != rows){
+		cout << "Not all cell values were specified - rows" << endl;
+		return 1;
+	}
+
 
 	for(int i=0; i < cols; i++){
 		for(int j=0; j < rows; j++){
@@ -63,7 +141,7 @@ int main()
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	assert(pitch % sizeof(float) == 0);
 	const int ipitch = pitch / sizeof(float);
-	VecAdd<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
+	calculateIntegralImage<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
 
 	// Copy over output from device to host
 	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, rows, cudaMemcpyDeviceToHost);
