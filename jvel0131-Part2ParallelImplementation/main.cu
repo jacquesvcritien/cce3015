@@ -4,6 +4,7 @@ using namespace std;
 #include <fstream>
 #include <sstream>
 #include "stdio.h"
+#include "jbutil.h"
 
 //function to check if a string is a number
 bool isNumber(string number)
@@ -15,20 +16,20 @@ bool isNumber(string number)
     //for each character in string
     for (; number[i] != 0; i++)
     {
-    	//if '.'
-    	if(number[i] == '.'){
-    		//if '.' and already found '.' or is first character
-    		if(point || i==0){
-    			return false;
-    		}
+	//if '.'
+	if(number[i] == '.'){
+		//if '.' and already found '.' or is first character
+		if(point || i==0){
+			return false;
+		}
 
-    		//set flag
-    		point = true;
-    	}
-    	else{
-    		if(!isdigit(number[i]))
-    			return false;
-  	}
+		//set flag
+		point = true;
+	}
+	else{
+		if(!isdigit(number[i]))
+			return false;
+	}
 
     }
     return true;
@@ -142,13 +143,6 @@ int main(int argc, char *argv[])
 	}
 
 
-	for(int i=0; i < cols; i++){
-		for(int j=0; j < rows; j++){
-			a[j][i] = i+1;
-			ii[j][i] = 0;
-		}
-	}
-
 	printf("INPUT\n");
 	 for(int i=0; i < rows;i++){
                 for(int j=0; j < cols;j++){
@@ -164,6 +158,9 @@ int main(int argc, char *argv[])
 	cudaMallocPitch((void**)&da, &pitch, rowsize, rows);
 	cudaMallocPitch((void**)&dii, &pitch, rowsize, rows);
 
+	// start timer
+	double t = jbutil::gettime();	
+
 	// Copy over input from host to device
 	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
 	cudaMemcpy2D(dii, pitch, ii, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
@@ -177,6 +174,9 @@ int main(int argc, char *argv[])
 	// Copy over output from device to host
 	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, rows, cudaMemcpyDeviceToHost);
 
+	// stop timer
+	t = jbutil::gettime() - t;
+
 	printf("\nOUTPUT\n");
 	 for(int i=0; i < rows;i++){
                 for(int j=0; j < cols;j++){
@@ -184,6 +184,8 @@ int main(int argc, char *argv[])
                 }
                 printf("\n");
         }
+
+	printf("Time taken: %fs\n", t);
 
 	// Free device memory
 	cudaFree(da);
