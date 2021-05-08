@@ -10,7 +10,6 @@ using namespace std;
 #include <fstream>
 #include <sstream>
 #include "jbutil.h"
-#include <ctime>
 
 //function to get index for pointer
 int getIndex(int row, int col, int cols){
@@ -70,19 +69,11 @@ bool isNumber(string number)
 }
 
 
-void saveOutput(double* ii, int rows, int cols){
-
-	time_t now = time(0);
-	tm *ltm = localtime(&now);
-
-	string year = to_string(1900 + ltm->tm_year);
-	string month = to_string(1+ltm->tm_mon);
-	string day = to_string(ltm->tm_mday);
-	string time = to_string(ltm->tm_hour)+":"+to_string(ltm->tm_min)+":"+to_string(ltm->tm_sec);
+void saveOutput(double* ii, int rows, int cols, string filename){
 
 	ofstream outputFile;
-	string filename = "outputs/output_"+year+"-"+month+"-"+day+"_"+time+".txt";
-	outputFile.open(filename);
+	string filename_to_save = "outputs/output_"+filename;
+	outputFile.open(filename_to_save);
 
 	for(int row = 0; row < rows; row++){
 		for(int col = 0; col < cols; col++){
@@ -197,7 +188,7 @@ int main (int argc, char *argv[]) {
 		cout << endl;
 	}
 
-	saveOutput(ii.data(), rows, cols);
+	saveOutput(ii.data(), rows, cols, filename);
 
 	std::cerr << "Time taken: " << t << "s" << std::endl;
 

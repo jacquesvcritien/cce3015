@@ -601,5 +601,4 @@ src/jvel0131-Part1SerialImprovement.o : ../src/jvel0131-Part1SerialImprovement.c
     /usr/include/x86_64-linux-gnu/c++/6/bits/c++io.h \
     /usr/include/c++/6/bits/fstream.tcc \
     ../src/jbutil.h \
-    /usr/include/x86_64-linux-gnu/sys/time.h \
-    /usr/include/c++/6/ctime
+    /usr/include/x86_64-linux-gnu/sys/time.h
