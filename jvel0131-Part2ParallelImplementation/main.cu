@@ -1,9 +1,40 @@
 
-
+using namespace std;
 #include <cassert>
 #include <fstream>
 #include <sstream>
 #include "stdio.h"
+
+//function to check if a string is a number
+bool isNumber(string number)
+{
+    int i = 0;
+    //flag for finding a '.'
+    bool point = false;
+
+    //for each character in string
+    for (; number[i] != 0; i++)
+    {
+    	//if '.'
+    	if(number[i] == '.'){
+    		//if '.' and already found '.' or is first character
+    		if(point || i==0){
+    			return false;
+    		}
+
+    		//set flag
+    		point = true;
+    	}
+    	else{
+    		if(!isdigit(number[i]))
+    			return false;
+  	}
+
+    }
+    return true;
+}
+
+
 
 __global__ void calculateIntegralImage(int rows, int cols, float *ii, const float *a, int pitch)
 {
@@ -33,7 +64,7 @@ int main(int argc, char *argv[])
 {
 	//check that file was passed
 	if(argc < 2 ){
-		cout << "Please pass in a filename" << endl;
+		printf("Please pass in a filename\n");
 		return 1;
 	}
 
@@ -45,7 +76,7 @@ int main(int argc, char *argv[])
 	//if not open
 	if (!file.is_open())
 	{
-		cout << "File not found" << endl;
+		printf("File not found\n");
 		return 1;
 	}
 
@@ -60,7 +91,7 @@ int main(int argc, char *argv[])
 	//get rows
 	iss >> arg;
 	if(!isNumber(arg)){
-		cout << "Rows must be a correct number" << endl;
+		printf("Rows must be a correct number\n");
 		return 1;
 	}
 	int const rows = stoi(arg);
@@ -68,7 +99,7 @@ int main(int argc, char *argv[])
 	//get cols
 	iss >> arg;
 	if(!isNumber(arg)){
-		cout << "Columns must be a correct number" << endl;
+		printf("Columns must be a correct number\n");
 		return 1;
 	}
 	int const cols = stoi(arg);
@@ -87,7 +118,7 @@ int main(int argc, char *argv[])
 		{
 			// check if passed value is number
 			if(!isNumber(arg)){
-				cout << "Cell values must be valid numbers" << endl;
+				printf("Cell values must be valid numbers\n");
 				return 1;
 			}
 
@@ -98,7 +129,7 @@ int main(int argc, char *argv[])
 
 		//if not enough cols
 		if(col_counter != cols){
-			cout << "Not all cell values were specified - columns" << endl;
+			printf("Not all cell values were specified - columns\n");
 			return 1;
 		}
 		row_counter++;
@@ -106,7 +137,7 @@ int main(int argc, char *argv[])
 
 	//if not enough rows
 	if(row_counter != rows){
-		cout << "Not all cell values were specified - rows" << endl;
+		printf("Not all cell values were specified - rows\n");
 		return 1;
 	}
 
