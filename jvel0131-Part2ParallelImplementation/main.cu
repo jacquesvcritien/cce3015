@@ -64,7 +64,7 @@ bool isNumber(string number)
 
 
 
-__global__ void calculateIntegralImage(int rows, int cols, float *ii, const float *a, int pitch)
+__global__ void calculateColumnSums(int rows, int cols, float *ii, const float *a, int pitch)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < rows){
@@ -74,10 +74,11 @@ __global__ void calculateIntegralImage(int rows, int cols, float *ii, const floa
 			ii[index] = prev_val + a[index];
 		}
 	}
+}
 
-	__syncthreads();
-
-
+__global__ void calculateRowSums(int rows, int cols, float *ii, const float *a, int pitch)
+{
+	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < cols){
                 for(int j=0; j < rows; j++){
                         int index = j * pitch + i;
@@ -196,7 +197,9 @@ int main(int argc, char *argv[])
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	assert(pitch % sizeof(float) == 0);
 	const int ipitch = pitch / sizeof(float);
-	calculateIntegralImage<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
+	calculateColumnSums<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
+
+	calculateRowSums<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
 
 	// Copy over output from device to host
 	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, rows, cudaMemcpyDeviceToHost);
