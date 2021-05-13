@@ -180,15 +180,6 @@ int main (int argc, char *argv[]) {
 	// stop timer
 	t = jbutil::gettime() - t;
 
-	//print output
-	cout << "OUTPUT" << endl;
-	for(int row = 0; row < rows; row++){
-		for(int col = 0; col < cols; col++){
-			cout << ii[row][col] << " ";
-		}
-		cout << endl;
-	}
-
 	saveOutput(ii.data(), rows, cols, filename);
 
 	std::cerr << "Time taken: " << t << "s" << std::endl;

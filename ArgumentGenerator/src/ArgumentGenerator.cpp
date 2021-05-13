@@ -11,8 +11,8 @@ using namespace std;
 #include "boost/multi_array.hpp"
 #include <fstream>
 int main() {
-	int rows = 300;
-	int cols = 300;
+	int rows = 5000;
+	int cols = 5000;
 
 	//init array
 //	double *arr[rows];
@@ -41,16 +41,16 @@ int main() {
 //	}
 
 	//print input
-	cout << "[";
-	for(int row = 0; row < rows; row++){
-		for(int col = 0; col < cols; col++){
-			cout << A[row][col] << " ";
-		}
-		cout << ';';
-	}
-
-
-	cout << ']' << endl;
+//	cout << "[";
+//	for(int row = 0; row < rows; row++){
+//		for(int col = 0; col < cols; col++){
+//			cout << A[row][col] << " ";
+//		}
+//		cout << ';';
+//	}
+//
+//
+//	cout << ']' << endl;
 
 	ofstream myfile;
 	string filename = "example"+to_string(rows)+"x"+to_string(cols)+".txt";

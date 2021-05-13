@@ -6,6 +6,9 @@
 CU_SRCS += \
 ../main.cu 
 
+O_SRCS += \
+../main.o 
+
 OBJS += \
 ./main.o 
 
