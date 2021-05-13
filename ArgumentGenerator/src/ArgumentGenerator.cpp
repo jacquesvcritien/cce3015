@@ -10,9 +10,9 @@
 using namespace std;
 #include "boost/multi_array.hpp"
 #include <fstream>
-int main() {
-	int rows = 5000;
-	int cols = 5000;
+int main(int argc, char *argv[]) {
+	int rows = atoi(argv[1]);
+	int cols = atoi(argv[2]);
 
 	//init array
 //	double *arr[rows];
