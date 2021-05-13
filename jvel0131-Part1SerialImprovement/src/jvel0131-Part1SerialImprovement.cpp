@@ -35,6 +35,7 @@ void calculateIntegralImage(boost::multi_array<double, 2> arr, double *ii, int r
 			int index = getIndex(row, col, cols);
 			double prev = row == 0 ? 0 : ii[index-cols];
 			ii[index] = prev + ii[index];
+
 		}
 	}
 }
