@@ -1,6 +1,7 @@
 
 using namespace std;
 #include <cassert>
+#include <array>
 #include <fstream>
 #include <sstream>
 #include "stdio.h"
@@ -71,7 +72,7 @@ __global__ void calculateRowSums(int rows, int cols, float *ii, const float *a, 
 	if(i < cols){
                 for(int j=0; j < rows; j++){
                         int index = j * pitch + i;
-                        int prev_index = (j-1) * pitch + i;
+                        int prev_index = index - pitch;
                         float prev_val = (j==0) ? 0 : ii[prev_index];
                         ii[index] = prev_val + ii[index];
                 }
@@ -160,6 +161,7 @@ int main(int argc, char *argv[])
 	}
 
 
+	/*
 	printf("INPUT\n");
 	 for(int i=0; i < rows;i++){
                 for(int j=0; j < cols;j++){
@@ -167,7 +169,8 @@ int main(int argc, char *argv[])
                 }
                 printf("\n");
         }
-
+	*/
+	
 	const int rowsize = cols * sizeof(float);
 	float *da, *dii;
 
@@ -182,7 +185,7 @@ int main(int argc, char *argv[])
 	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
 	cudaMemcpy2D(dii, pitch, ii, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
 
-	int threadsInBlocks = 64;
+	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	assert(pitch % sizeof(float) == 0);
 	const int ipitch = pitch / sizeof(float);
