@@ -1,0 +1,6 @@
+inputs/example10000x10000.txt
+inputs/example5000x5000.txt
+outputs/output_example10000x10000.txt
+outputs/output_example5000x5000.txt
+outputs/vectoroutput_example10000x10000.txt
+outputs/vectoroutput_example5000x5000.txt
