@@ -9,6 +9,7 @@ using namespace std;
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include <regex>
 #include "jbutil.h"
 
 //function to get index for pointer
@@ -70,9 +71,12 @@ bool isNumber(string number)
 }
 
 
-void saveOutput(double* ii, int rows, int cols, string filename){
+void saveOutput(double* ii, int rows, int cols, string filename, double t){
 
 	ofstream outputFile;
+	filename = filename.substr(filename.find_last_of("/") + 1);
+	filename = filename.substr(0, filename.size()-4);
+	filename = filename+".txt";
 	string filename_to_save = "outputs/output_"+filename;
 	outputFile.open(filename_to_save);
 
@@ -83,6 +87,8 @@ void saveOutput(double* ii, int rows, int cols, string filename){
 		}
 		outputFile << endl;
 	}
+
+	outputFile << "Time taken: " << t << "s" << endl;
 
 	cout << "Result written to file" << endl;
 
@@ -99,76 +105,37 @@ int main (int argc, char *argv[]) {
 
 	//get filename
 	string filename = argv[1];
-	//open file
-	ifstream file (filename);
+	//get extension
+	string ext = filename.substr(filename.size()-4, filename.size());
 
-	//if not open
-	if (!file.is_open())
-	{
-		cout << "File not found" << endl;
+	if(ext != ".pgm"){
+		cout << "Input must be a .pgm file" << endl;
 		return 1;
 	}
 
-	string line;
-	//read first line
-	getline (file,line);
+	bool save = true;
 
-	//read word by word in line
-	istringstream iss(line);
-	string arg;
-
-	//get rows
-	iss >> arg;
-	if(!isNumber(arg)){
-		cout << "Rows must be a correct number" << endl;
-		return 1;
+	if(argc == 3){
+		save = argv[2] == "true" || argv[2] == "t";
 	}
-	int rows = stoi(arg);
 
-	//get cols
-	iss >> arg;
-	if(!isNumber(arg)){
-		cout << "Columns must be a correct number" << endl;
-		return 1;
-	}
-	int cols = stoi(arg);
+	//read file
+	jbutil::image<int> image_in;
+	std::ifstream file_in(filename.c_str());
+	image_in.load(file_in);
 
 	//init boost array
 	typedef boost::multi_array<double, 2> array_type;
+	int rows = image_in.get_rows();
+	int cols = image_in.get_cols();
 	array_type A(boost::extents[rows][cols]);
 	array_type ii(boost::extents[rows][cols]);
 
-	//read every line
-	int row_counter =0;
-	while ( getline (file,line) )
-	{
-		istringstream iss(line);
-		int col_counter =0;
-		//read every value in each line
-		while(iss >> arg)
-		{
-			// check if passed value is number
-			if(!isNumber(arg)){
-				cout << "Cell values must be valid numbers" << endl;
-				return 1;
-			}
 
-			A[row_counter][col_counter] = stof(arg);
-			col_counter++;
+	for(int row=0; row < rows; row++){
+		for (int col=0; col < cols; col++){
+			A[row][col] = image_in(0, row, col);
 		}
-
-		//if not enough cols
-		if(col_counter != cols){
-			cout << "Not all cell values were specified - columns" << endl;
-			return 1;
-		}
-		row_counter++;
-	}
-
-	//if not enough rows
-	if(row_counter != rows){
-		cout << "Not all cell values were specified - rows" << endl;
-		return 1;
 	}
 
 	// start timer
@@ -180,7 +147,10 @@ int main (int argc, char *argv[]) {
 	// stop timer
 	t = jbutil::gettime() - t;
 
-	saveOutput(ii.data(), rows, cols, filename);
+	//if to save output
+	if(save){
+		saveOutput(ii.data(), rows, cols, filename, t);
+	}
 
 	std::cerr << "Time taken: " << t << "s" << std::endl;
 
