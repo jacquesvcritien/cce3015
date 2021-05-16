@@ -10,6 +10,8 @@ using namespace std;
 void saveOutput(float *ii, int rows, int cols, string filename){
 
 	ofstream outputFile;
+	filename = filename.substr(filename.find("/") + 1); 
+	printf("%s\n", filename.c_str());
 	string filename_to_save = "outputs/vectoroutput_"+filename;
 	outputFile.open(filename_to_save);
 

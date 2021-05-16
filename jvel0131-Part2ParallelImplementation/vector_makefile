@@ -1,0 +1,3 @@
+main_vector.o: main_vector.cu
+	nvcc -G -g -c main_vector.cu -o main_vector.o
+	g++ main_vector.o -o main_vector -lcudart
