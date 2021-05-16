@@ -38,6 +38,7 @@ int main(int argc, char * argv[]) {
 	// save image
 	ofstream file_out(filename.c_str());
 	image_out.save(file_out);
+	file_out.close();
 
 	//save textfile
 	ofstream textfile;
@@ -51,4 +52,7 @@ int main(int argc, char * argv[]) {
 		}
 		textfile << endl;
 	}
+
+
+	textfile.close();
 }
