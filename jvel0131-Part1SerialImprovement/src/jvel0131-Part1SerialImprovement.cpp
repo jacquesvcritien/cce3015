@@ -17,6 +17,7 @@ int getIndex(int row, int col, int cols){
 	return (row * cols) + col;
 }
 
+//function to calculate integral image
 void calculateIntegralImage(boost::multi_array<double, 2> arr, double *ii, int rows, int cols){
 
 	//count columns first (left to right)
@@ -30,7 +31,7 @@ void calculateIntegralImage(boost::multi_array<double, 2> arr, double *ii, int r
 		}
 	}
 
-	//count rows first (top to bottom)
+	//count rows (top to bottom)
 	for(int col=0; col < cols; col++){
 		for(int row=0; row < rows; row++){
 			int index = getIndex(row, col, cols);
@@ -70,16 +71,19 @@ bool isNumber(string number)
     return true;
 }
 
-
+//function to save outout
 void saveOutput(double* ii, int rows, int cols, string filename, double t){
 
+	//open output stream
 	ofstream outputFile;
+	//get filename to save
 	filename = filename.substr(filename.find_last_of("/") + 1);
 	filename = filename.substr(0, filename.size()-4);
 	filename = filename+".txt";
 	string filename_to_save = "outputs/output_"+filename;
 	outputFile.open(filename_to_save);
 
+	//output contents to file
 	for(int row = 0; row < rows; row++){
 		for(int col = 0; col < cols; col++){
 			int index = getIndex(row, col, cols);
@@ -113,6 +117,7 @@ int main (int argc, char *argv[]) {
 		return 1;
 	}
 
+	//check if command line argument to save output to a file is passed
 	bool save = true;
 
 	if(argc == 3){
@@ -131,7 +136,7 @@ int main (int argc, char *argv[]) {
 	array_type A(boost::extents[rows][cols]);
 	array_type ii(boost::extents[rows][cols]);
 
-
+	//fill boost arrat
 	for(int row=0; row < rows; row++){
 		for (int col=0; col < cols; col++){
 			A[row][col] = image_in(0, row, col);
