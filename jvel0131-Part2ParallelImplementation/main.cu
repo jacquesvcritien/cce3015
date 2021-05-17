@@ -7,18 +7,23 @@ using namespace std;
 #include "stdio.h"
 #include "jbutil.h"
 
-void saveOutput(float **ii, int rows, int cols, string filename){
+void saveOutput(float *ii, int rows, int cols, string filename, double t){
 
 	ofstream outputFile;
+	filename = filename.substr(filename.find_last_of("/") + 1);
+	filename = filename.substr(0, filename.size()-4);
+	filename = filename+".txt";
 	string filename_to_save = "outputs/output_"+filename;
 	outputFile.open(filename_to_save);
 
 	for(size_t row = 0; row < rows; row++){
 		for(size_t col = 0; col < cols; col++){
-			outputFile << ii[row][col] << " ";
+			outputFile << ii[row * cols +col] << " ";
 		}
 		outputFile << endl;
 	}
+
+	outputFile << "Time taken: " << t << "s" << endl;
 
 	cout << "Result written to file" << endl;
 
@@ -54,25 +59,25 @@ bool isNumber(string number)
     return true;
 }
 
-__global__ void calculateColumnSums(int rows, int cols, float *ii, const float *a, int pitch)
+__global__ void calculateColumnSums(int rows, int cols, float *ii, const float *a)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < rows){
 		for(int j=0; j < cols; j++){
-			int index = i * pitch + j;
+			int index = i * cols + j;
 			float prev_val = (j==0) ? 0 : ii[index-1];
 			ii[index] = prev_val + a[index];
 		}
 	}
 }
 
-__global__ void calculateRowSums(int rows, int cols, float *ii, const float *a, int pitch)
+__global__ void calculateRowSums(int rows, int cols, float *ii, const float *a)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < cols){
                 for(int j=0; j < rows; j++){
-                        int index = j * pitch + i;
-                        int prev_index = index - pitch;
+                        int index = j * cols + i;
+                        int prev_index = index - cols;
                         float prev_val = (j==0) ? 0 : ii[prev_index];
                         ii[index] = prev_val + ii[index];
                 }
@@ -89,134 +94,73 @@ int main(int argc, char *argv[])
 
 	//get filename
 	string filename = argv[1];
-	//open file
-	ifstream file (filename);
+	//get extension
+	string ext = filename.substr(filename.size()-4, filename.size());
 
-	//if not open
-	if (!file.is_open())
-	{
-		printf("File not found\n");
+	if(ext != ".pgm"){
+		cout << "Input must be a .pgm file" << endl;
 		return 1;
 	}
 
-	string line;
-	//read first line
-	getline (file,line);
-
-	//read word by word in line
-	istringstream iss(line);
-	string arg;
-
-	//get rows
-	iss >> arg;
-	if(!isNumber(arg)){
-		printf("Rows must be a correct number\n");
-		return 1;
-	}
-	int const rows = stoi(arg);
-
-	//get cols
-	iss >> arg;
-	if(!isNumber(arg)){
-		printf("Columns must be a correct number\n");
-		return 1;
-	}
-	int const cols = stoi(arg);
-
-
-	float a[rows][cols], ii[rows][cols];
-
-	//read every line
-	int row_counter =0;
-	while ( getline (file,line) )
-	{
-		istringstream iss(line);
-		int col_counter =0;
-		//read every value in each line
-		while(iss >> arg)
-		{
-			// check if passed value is number
-			if(!isNumber(arg)){
-				printf("Cell values must be valid numbers\n");
-				return 1;
-			}
-
-			a[row_counter][col_counter] = stof(arg);
-			ii[row_counter][col_counter] = 0;
-			col_counter++;
-		}
-
-		//if not enough cols
-		if(col_counter != cols){
-			printf("Not all cell values were specified - columns\n");
-			return 1;
-		}
-		row_counter++;
-	}
-
-	//if not enough rows
-	if(row_counter != rows){
-		printf("Not all cell values were specified - rows\n");
-		return 1;
-	}
-
-
-	/*
-	printf("INPUT\n");
-	 for(int i=0; i < rows;i++){
-                for(int j=0; j < cols;j++){
-                        printf("%f ", a[i][j]);
-                }
-                printf("\n");
-        }
-	*/
+	bool save = true;
 	
-	const int rowsize = cols * sizeof(float);
+	if(argc == 3){
+		save = argv[2] == "true" || argv[2] == "t";
+	}
+	
+	//read file
+	jbutil::image<int> image_in;
+	std::ifstream file_in(filename.c_str());
+	image_in.load(file_in);
+
+	int rows = image_in.get_rows();
+	int cols = image_in.get_cols();
+
+	const int size = rows * cols * sizeof(float);
+	float *a, *ii;
+	a=(float*)malloc(size);	
+	ii=(float*)malloc(size);	
+
+
+	for(int row=0; row < rows; row++){
+                for (int col=0; col < cols; col++){
+			a[row * cols +  col] = image_in(0, row, col);
+                        ii[row * cols + col] = 0;
+                }
+        }
+
 	float *da, *dii;
 
-	size_t pitch;
-	cudaMallocPitch((void**)&da, &pitch, rowsize, rows);
-	cudaMallocPitch((void**)&dii, &pitch, rowsize, rows);
+	cudaMalloc((void**)&da, size);
+	cudaMalloc((void**)&dii, size);
 
 	// start timer
 	double t = jbutil::gettime();	
 
 	// Copy over input from host to device
-	cudaMemcpy2D(da, pitch, a, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
-	cudaMemcpy2D(dii, pitch, ii, rowsize, rowsize, rows, cudaMemcpyHostToDevice);
+	cudaMemcpy(da, a, size, cudaMemcpyHostToDevice);
+	cudaMemcpy(dii, ii, size, cudaMemcpyHostToDevice);
+
+	free(a);
 
 	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
-	assert(pitch % sizeof(float) == 0);
-	const int ipitch = pitch / sizeof(float);
-	calculateColumnSums<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
-	calculateRowSums<<<nblocks, 64>>>(rows, cols, dii, da, ipitch);
+	calculateColumnSums<<<nblocks, 64>>>(rows, cols, dii, da);
+	calculateRowSums<<<nblocks, 64>>>(rows, cols, dii, da);
 
 	// Copy over output from device to host
-	cudaMemcpy2D(ii, rowsize, dii, pitch, rowsize, rows, cudaMemcpyDeviceToHost);
+	cudaMemcpy(ii, dii, size, cudaMemcpyDeviceToHost);
 
 	// stop timer
 	t = jbutil::gettime() - t;
 
-	/*
-	printf("\nOUTPUT\n");
-	 for(int i=0; i < rows;i++){
-                for(int j=0; j < cols;j++){
-                        printf("%f ", ii[i][j]);
-                }
-                printf("\n");
-        }*/
-
 	printf("Time taken: %fs\n", t);
 
-	float* iiPtrs[rows];
-	for (int i = 0; i < rows; ++i)
-		iiPtrs[i] = ii[i];
+	if(save){
+		saveOutput(ii, rows, cols, filename, t);
+	}
 
-	float** iiToPrint = iiPtrs;
-
-	saveOutput(iiToPrint, rows, cols, filename);
-
+	free(ii);
 	// Free device memory
 	cudaFree(da);
 	cudaFree(dii);
