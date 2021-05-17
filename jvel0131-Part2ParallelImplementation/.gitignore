@@ -18,5 +18,3 @@ outputs/output_test_20000x20000.txt
 outputs/output_test_5000x5000.txt
 outputs/vectoroutput_example10000x10000.txt
 outputs/vectoroutput_example5000x5000.txt
-/Debug/
-/Release/
