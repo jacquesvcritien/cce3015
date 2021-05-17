@@ -59,29 +59,40 @@ bool isNumber(string number)
     return true;
 }
 
-__global__ void calculateColumnSums(int rows, int cols, float *ii, const float *a)
+//function to calculate row cumulative sums
+__global__ void cumulativeRowPass(int rows, int cols, float *ii, const float *a)
 {
+	//get row
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < rows){
+		//for each column
 		for(int j=0; j < cols; j++){
+			//get index from array
 			int index = i * cols + j;
+			//get previous value
 			float prev_val = (j==0) ? 0 : ii[index-1];
 			ii[index] = prev_val + a[index];
 		}
 	}
 }
 
-__global__ void calculateRowSums(int rows, int cols, float *ii, const float *a)
+//function to calculate column cumulative sums
+__global__ void cumulativeColumnPass(int rows, int cols, float *ii, const float *a)
 {
+	//get column index
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < cols){
-                for(int j=0; j < rows; j++){
-                        int index = j * cols + i;
-                        int prev_index = index - cols;
-                        float prev_val = (j==0) ? 0 : ii[prev_index];
-                        ii[index] = prev_val + ii[index];
-                }
-        }
+		//for each row in column
+		for(int j=0; j < rows; j++){
+			//get index from array
+			int index = j * cols + i;
+			//get previous index
+			int prev_index = index - cols;
+			//get previous value
+			float prev_val = (j==0) ? 0 : ii[prev_index];
+			ii[index] = prev_val + ii[index];
+		}
+	}
 }
 
 int main(int argc, char *argv[])
@@ -102,6 +113,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	//check cli argument to see whether to save output to file
 	bool save = true;
 	
 	if(argc == 3){
@@ -113,21 +125,23 @@ int main(int argc, char *argv[])
 	std::ifstream file_in(filename.c_str());
 	image_in.load(file_in);
 
+	//get rows and cols
 	int rows = image_in.get_rows();
 	int cols = image_in.get_cols();
 
 	const int size = rows * cols * sizeof(float);
+	//initialise arrays
 	float *a, *ii;
 	a=(float*)malloc(size);	
 	ii=(float*)malloc(size);	
 
-
+	//fill array from image
 	for(int row=0; row < rows; row++){
-                for (int col=0; col < cols; col++){
+		for (int col=0; col < cols; col++){
 			a[row * cols +  col] = image_in(0, row, col);
-                        ii[row * cols + col] = 0;
-                }
-        }
+			ii[row * cols + col] = 0;
+		}
+	}
 
 	float *da, *dii;
 
@@ -141,12 +155,14 @@ int main(int argc, char *argv[])
 	cudaMemcpy(da, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(dii, ii, size, cudaMemcpyHostToDevice);
 
+	//free memory for original array
 	free(a);
 
 	int threadsInBlocks = 512;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
-	calculateColumnSums<<<nblocks, 64>>>(rows, cols, dii, da);
-	calculateRowSums<<<nblocks, 64>>>(rows, cols, dii, da);
+	//start kernels
+	cumulativeRowPass<<<nblocks, 64>>>(rows, cols, dii, da);
+	cumulativeColumnPass<<<nblocks, 64>>>(rows, cols, dii, da);
 
 	// Copy over output from device to host
 	cudaMemcpy(ii, dii, size, cudaMemcpyDeviceToHost);
@@ -156,12 +172,13 @@ int main(int argc, char *argv[])
 
 	printf("Time taken: %fs\n", t);
 
+	//output to file if save is true
 	if(save){
 		saveOutput(ii, rows, cols, filename, t);
 	}
 
 	free(ii);
-	// Free device memory
+	//free device memory
 	cudaFree(da);
 	cudaFree(dii);
 
