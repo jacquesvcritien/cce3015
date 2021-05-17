@@ -143,7 +143,7 @@ int main(int argc, char *argv[])
 
 	free(a);
 
-	int threadsInBlocks = 32;
+	int threadsInBlocks = 64;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	calculateColumnSums<<<nblocks, 64>>>(rows, cols, dii, da);
 	calculateRowSums<<<nblocks, 64>>>(rows, cols, dii, da);
