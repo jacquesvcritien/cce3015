@@ -1,0 +1,3 @@
+main_vector_image.o: main_vector_image.cu
+	nvcc -G -g -c main_vector_image.cu -o main_vector_image.o
+	g++ main_vector_image.o -o main_vector_image -lcudart
