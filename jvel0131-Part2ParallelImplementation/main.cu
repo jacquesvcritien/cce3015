@@ -158,7 +158,7 @@ int main(int argc, char *argv[])
 	//free memory for original array
 	free(a);
 
-	int threadsInBlocks = 512;
+	int threadsInBlocks = 992;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	//start kernels
 	cumulativeRowPass<<<nblocks, 64>>>(rows, cols, dii, da);
