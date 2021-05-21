@@ -71,7 +71,7 @@ bool isNumber(string number)
     return true;
 }
 
-//function to save outout
+//function to save output
 void saveOutput(double* ii, int rows, int cols, string filename, double t){
 
 	//open output stream

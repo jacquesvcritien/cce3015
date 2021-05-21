@@ -600,5 +600,39 @@ src/jvel0131-Part1SerialImprovement.o : ../src/jvel0131-Part1SerialImprovement.c
     /usr/include/x86_64-linux-gnu/c++/6/bits/basic_file.h \
     /usr/include/x86_64-linux-gnu/c++/6/bits/c++io.h \
     /usr/include/c++/6/bits/fstream.tcc \
+    /usr/include/c++/6/regex \
+    /usr/include/c++/6/bitset \
+    /usr/include/c++/6/locale \
+    /usr/include/c++/6/bits/locale_facets_nonio.h \
+    /usr/include/c++/6/ctime \
+    /usr/include/x86_64-linux-gnu/c++/6/bits/time_members.h \
+    /usr/include/x86_64-linux-gnu/c++/6/bits/messages_members.h \
+    /usr/include/libintl.h \
+    /usr/include/c++/6/bits/locale_facets_nonio.tcc \
+    /usr/include/c++/6/bits/locale_conv.h \
+    /usr/include/c++/6/stack \
+    /usr/include/c++/6/deque \
+    /usr/include/c++/6/bits/stl_deque.h \
+    /usr/include/c++/6/bits/deque.tcc \
+    /usr/include/c++/6/bits/stl_stack.h \
+    /usr/include/c++/6/map \
+    /usr/include/c++/6/bits/stl_tree.h \
+    /usr/include/c++/6/bits/stl_map.h \
+    /usr/include/c++/6/bits/stl_multimap.h \
+    /usr/include/c++/6/cstring \
+    /usr/include/string.h \
+    /usr/include/strings.h \
+    /usr/include/c++/6/bits/regex_constants.h \
+    /usr/include/c++/6/bits/regex_error.h \
+    /usr/include/c++/6/bits/regex_automaton.h \
+    /usr/include/c++/6/bits/regex_automaton.tcc \
+    /usr/include/c++/6/bits/regex_scanner.h \
+    /usr/include/c++/6/bits/regex_scanner.tcc \
+    /usr/include/c++/6/bits/regex_compiler.h \
+    /usr/include/c++/6/bits/regex_compiler.tcc \
+    /usr/include/c++/6/bits/regex.h \
+    /usr/include/c++/6/bits/regex.tcc \
+    /usr/include/c++/6/bits/regex_executor.h \
+    /usr/include/c++/6/bits/regex_executor.tcc \
     ../src/jbutil.h \
     /usr/include/x86_64-linux-gnu/sys/time.h
