@@ -23,7 +23,7 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 		outputFile << endl;
 	}
 
-	outputFile << "Time taken: " << t << "s" << endl;
+	outputFile << "Time taken in calculation: " << t << "s" << endl;
 
 	cout << "Result written to file" << endl;
 
@@ -149,34 +149,51 @@ int main(int argc, char *argv[])
 	cudaMalloc((void**)&dii, size);
 
 	// start timer
-	double t = jbutil::gettime();	
+	double t = jbutil::gettime();
 
 	// Copy over input from host to device
 	cudaMemcpy(da, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(dii, ii, size, cudaMemcpyHostToDevice);
 
+	// stop timer
+	t = jbutil::gettime() - t;
+	printf("Time taken to copy from host to device: %fs\n", t);
+
 	//free memory for original array
 	free(a);
 
-	int threadsInBlocks = 992;
+	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
+	printf("Number of threads in blocks: %d\n", threadsInBlocks);
+	printf("Number of blocks: %d\n", nblocks);
+
+	//start timer
+	t = jbutil::gettime();
+
 	//start kernels
-	cumulativeRowPass<<<nblocks, 64>>>(rows, cols, dii, da);
-	cumulativeColumnPass<<<nblocks, 64>>>(rows, cols, dii, da);
+	cumulativeRowPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii, da);
+	cumulativeColumnPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii, da);
+
+	// stop timer
+	t = jbutil::gettime() - t;
+	printf("Time taken to calculate integral image: %fs\n", t);
+
+	t = jbutil::gettime();
 
 	// Copy over output from device to host
 	cudaMemcpy(ii, dii, size, cudaMemcpyDeviceToHost);
 
 	// stop timer
 	t = jbutil::gettime() - t;
+	printf("Time taken to copy from device to host: %fs\n", t);
 
-	printf("Time taken: %fs\n", t);
 
 	//output to file if save is true
 	if(save){
 		saveOutput(ii, rows, cols, filename, t);
 	}
 
+	//free host memory
 	free(ii);
 	//free device memory
 	cudaFree(da);
