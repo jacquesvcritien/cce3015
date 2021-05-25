@@ -42,34 +42,6 @@ void calculateIntegralImage(boost::multi_array<double, 2> arr, double *ii, int r
 	}
 }
 
-//function to check if a string is a number
-bool isNumber(string number)
-{
-    int i = 0;
-    //flag for finding a '.'
-    bool point = false;
-
-    //for each character in string
-    for (; number[i] != 0; i++)
-    {
-    	//if '.'
-    	if(number[i] == '.'){
-    		//if '.' and already found '.' or is first character
-    		if(point || i==0){
-    			return false;
-    		}
-
-    		//set flag
-    		point = true;
-    	}
-    	else{
-    		if(!isdigit(number[i]))
-    			return false;
-    	}
-
-    }
-    return true;
-}
 
 //function to save output
 void saveOutput(double* ii, int rows, int cols, string filename, double t){
