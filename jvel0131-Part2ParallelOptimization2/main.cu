@@ -115,14 +115,9 @@ int main(int argc, char *argv[])
 	cudaHostAlloc((void**)&ii, size, cudaHostAllocWriteCombined);
 
 	//fill array from image
-	for(int row=0; row <= rows; row++){
-		for (int col=0; col <= cols; col++){
-			if(row == 0 || col == 0){
-				ii[row * (cols+1) + col] = 0;
-			}
-			else{
-				ii[row * (cols+1) + col] = image_in(0, row-1, col-1);
-			}
+	for(int row=0; row < rows; row++){
+		for (int col=0; col < cols; col++){
+			ii[row * cols + col] = image_in(0, row, col);
 		}
 	}
 
