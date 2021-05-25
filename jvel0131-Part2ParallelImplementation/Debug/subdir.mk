@@ -4,16 +4,16 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CU_SRCS += \
-../main_vector_image.cu 
+../main.cu 
 
 O_SRCS += \
-../main_vector_image.o 
+../main.o 
 
 OBJS += \
-./main_vector_image.o 
+./main.o 
 
 CU_DEPS += \
-./main_vector_image.d 
+./main.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

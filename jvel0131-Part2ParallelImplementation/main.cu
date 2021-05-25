@@ -7,6 +7,7 @@ using namespace std;
 #include "stdio.h"
 #include "jbutil.h"
 
+//function to save output to file
 void saveOutput(float *ii, int rows, int cols, string filename, double t){
 
 	ofstream outputFile;
@@ -28,35 +29,6 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 	cout << "Result written to file" << endl;
 
 	outputFile.close();
-}
-
-//function to check if a string is a number
-bool isNumber(string number)
-{
-    int i = 0;
-    //flag for finding a '.'
-    bool point = false;
-
-    //for each character in string
-    for (; number[i] != 0; i++)
-    {
-	//if '.'
-	if(number[i] == '.'){
-		//if '.' and already found '.' or is first character
-		if(point || i==0){
-			return false;
-		}
-
-		//set flag
-		point = true;
-	}
-	else{
-		if(!isdigit(number[i]))
-			return false;
-	}
-
-    }
-    return true;
 }
 
 //function to calculate row cumulative sums
@@ -143,11 +115,13 @@ int main(int argc, char *argv[])
 		}
 	}
 
+	//Allocate memory on device
 	float *da, *dii;
-
 	cudaMalloc((void**)&da, size);
 	cudaMalloc((void**)&dii, size);
 
+	//holds total time
+	double totalTime = 0;
 	// start timer
 	double t = jbutil::gettime();
 
@@ -157,6 +131,7 @@ int main(int argc, char *argv[])
 
 	// stop timer
 	t = jbutil::gettime() - t;
+	totalTime += t;
 	printf("Time taken to copy from host to device: %fs\n", t);
 
 	//free memory for original array
@@ -177,6 +152,7 @@ int main(int argc, char *argv[])
 	// stop timer
 	t = jbutil::gettime() - t;
 	printf("Time taken to calculate integral image: %fs\n", t);
+	totalTime += t;
 
 	t = jbutil::gettime();
 
@@ -186,12 +162,15 @@ int main(int argc, char *argv[])
 	// stop timer
 	t = jbutil::gettime() - t;
 	printf("Time taken to copy from device to host: %fs\n", t);
+	totalTime += t;
 
 
 	//output to file if save is true
 	if(save){
-		saveOutput(ii, rows, cols, filename, t);
+		saveOutput(ii, rows, cols, filename, totalTime);
 	}
+
+	printf("Total time taken: %fs\n", totalTime);
 
 	//free host memory
 	free(ii);
