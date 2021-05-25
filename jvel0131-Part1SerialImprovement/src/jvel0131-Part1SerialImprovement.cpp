@@ -108,7 +108,7 @@ int main (int argc, char *argv[]) {
 	array_type A(boost::extents[rows][cols]);
 	array_type ii(boost::extents[rows][cols]);
 
-	//fill boost arrat
+	//fill boost array
 	for(int row=0; row < rows; row++){
 		for (int col=0; col < cols; col++){
 			A[row][col] = image_in(0, row, col);
