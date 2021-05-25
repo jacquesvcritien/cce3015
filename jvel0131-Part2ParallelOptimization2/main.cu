@@ -137,7 +137,7 @@ int main(int argc, char *argv[])
 	totalTime += t;
 
 
-	int threadsInBlocks = 64;
+	int threadsInBlocks = 512;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	printf("Number of threads in blocks: %d\n", threadsInBlocks);
 	printf("Number of blocks: %d\n", nblocks);
