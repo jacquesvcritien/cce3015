@@ -1,6 +1,6 @@
 /**
  * What was improved?
- * - Removed extra copy A - I can use ii array directly
+ * - Removed extra copy of array a - I can use ii array directly
  * - Reduced some extra operations, for example, calculating row or column index only once rather than for each element in that row or column
  */
 
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 
 	double totalTime = 0;
 	// start timer
-	double t = jbutil::gettime();	
+	double t = jbutil::gettime();
 
 	// Copy over input from host to device
 	cudaMemcpy(dii, ii, size, cudaMemcpyHostToDevice);

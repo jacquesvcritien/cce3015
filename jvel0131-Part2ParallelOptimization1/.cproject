@@ -80,7 +80,7 @@
 								<option id="nvcc.compiler.option.level.845914428" name="Generate host debug information (-g)" superClass="nvcc.compiler.option.level"/>
 								<option defaultValue="nvcc.compiler.optimization.level.most" id="nvcc.compiler.optimization.level.374988282" name="Optimization Level" superClass="nvcc.compiler.optimization.level" valueType="enumerated"/>
 								<option id="nvcc.compiler.pic.1526328062" name="Position Independent Code (-fPIC)" superClass="nvcc.compiler.pic"/>
-								<option id="nvcc.compiler.def.symbols.945532401" superClass="nvcc.compiler.def.symbols" valueType="definedSymbols">
+								<option id="nvcc.compiler.def.symbols.945532401" name="Defined symbols (-D)" superClass="nvcc.compiler.def.symbols" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="NDEBUG"/>
 								</option>
 								<inputType id="nvcc.compiler.input.cu.1400491061" superClass="nvcc.compiler.input.cu"/>
