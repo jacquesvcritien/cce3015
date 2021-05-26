@@ -22,11 +22,12 @@ void calculateIntegralImage(double *ii, int rows, int cols){
 
 	//count columns first (left to right)
 	for(int row=0; row < rows; row++){
+		//get row_index
+		int row_index = row * cols;
 		for(int col=0; col < cols; col++){
-
-			int index = getIndex(row, col, cols);
+			//get cell index
+			int index = row_index + col;
 			double prev = col == 0 ? 0 : ii[index-1];
-
 			ii[index] = prev + ii[index];
 		}
 	}
