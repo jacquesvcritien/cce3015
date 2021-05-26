@@ -18,7 +18,7 @@ int getIndex(int row, int col, int cols){
 }
 
 //function to calculate integral image
-void calculateIntegralImage(boost::multi_array<double, 2> arr, double *ii, int rows, int cols){
+void calculateIntegralImage(double *ii, int rows, int cols){
 
 	//count columns first (left to right)
 	for(int row=0; row < rows; row++){
@@ -27,7 +27,7 @@ void calculateIntegralImage(boost::multi_array<double, 2> arr, double *ii, int r
 			int index = getIndex(row, col, cols);
 			double prev = col == 0 ? 0 : ii[index-1];
 
-			ii[index] = prev + arr[row][col];
+			ii[index] = prev + ii[index];
 		}
 	}
 
@@ -105,13 +105,12 @@ int main (int argc, char *argv[]) {
 	typedef boost::multi_array<double, 2> array_type;
 	int rows = image_in.get_rows();
 	int cols = image_in.get_cols();
-	array_type A(boost::extents[rows][cols]);
 	array_type ii(boost::extents[rows][cols]);
 
 	//fill boost array
 	for(int row=0; row < rows; row++){
 		for (int col=0; col < cols; col++){
-			A[row][col] = image_in(0, row, col);
+			ii[row][col] = image_in(0, row, col);
 		}
 	}
 
@@ -119,7 +118,7 @@ int main (int argc, char *argv[]) {
 	double t = jbutil::gettime();
 
 	//calculate values
-	calculateIntegralImage(A, ii.data(), rows, cols);
+	calculateIntegralImage(ii.data(), rows, cols);
 
 	// stop timer
 	t = jbutil::gettime() - t;
