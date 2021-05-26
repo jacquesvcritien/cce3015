@@ -1,7 +1,7 @@
 /**
  * What was improved?
- * - Removed extra copy of array a - I can use ii array directly
- * - Reduced some extra operations, for example, calculating row or column index only once rather than for each element in that row or column
+ * - Removed malloc and changed them to cudaAllocHost
+ * - Added cudaHostAllocWriteCombined flag
  */
 
 using namespace std;
@@ -12,7 +12,7 @@ using namespace std;
 #include "stdio.h"
 #include "jbutil.h"
 
-//function to save output to file
+//function to save output
 void saveOutput(float *ii, int rows, int cols, string filename, double t){
 
 	ofstream outputFile;
@@ -29,7 +29,7 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 		outputFile << endl;
 	}
 
-	outputFile << "Time taken in calculation: " << t << "s" << endl;
+	outputFile << "Time taken: " << t << "s" << endl;
 
 	cout << "Result written to file" << endl;
 
@@ -111,7 +111,8 @@ int main(int argc, char *argv[])
 	const int size = rows * cols * sizeof(float);
 	//initialise arrays
 	float *ii;
-	ii=(float*)malloc(size);
+	//allocate memory to host with write combined flag
+	cudaHostAlloc((void**)&ii, size, cudaHostAllocWriteCombined);
 
 	//fill array from image
 	for(int row=0; row < rows; row++){
@@ -120,8 +121,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	//initialise device memory
-	float *dii;
+	float* dii;
 	cudaMalloc((void**)&dii, size);
 
 	double totalTime = 0;
@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
 	printf("Time taken to copy from host to device: %fs\n", t);
 	totalTime += t;
 
+
 	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	printf("Number of threads in blocks: %d\n", threadsInBlocks);
@@ -145,15 +146,14 @@ int main(int argc, char *argv[])
 	t = jbutil::gettime();
 
 	//start kernels
-	cumulativeColumnPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
 	cumulativeRowPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
+	cumulativeColumnPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
 
 	// stop timer
 	t = jbutil::gettime() - t;
 	printf("Time taken to calculate integral image: %fs\n", t);
 	totalTime += t;
 
-	// start timer
 	t = jbutil::gettime();
 
 	// Copy over output from device to host
@@ -171,8 +171,7 @@ int main(int argc, char *argv[])
 
 	printf("Total time taken: %fs\n", totalTime);
 
-	//free memory on host
-	free(ii);
+	cudaFreeHost(ii);
 	//free device memory
 	cudaFree(dii);
 

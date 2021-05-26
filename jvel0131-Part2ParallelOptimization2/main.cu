@@ -1,7 +1,8 @@
 /**
  * What was improved?
- * - Removed malloc and changed them to cudaAllocHost
- * - Added cudaHostAllocWriteCombined flag
+ * - Removed the row pass kernel and kept only the column pass kernel
+ * - Implemented a transpose kernel which copies the array to another one in a transposed way
+ * - This was done to reduce time taken due to uncoalesced memory
  */
 
 using namespace std;
@@ -12,7 +13,7 @@ using namespace std;
 #include "stdio.h"
 #include "jbutil.h"
 
-//function to save output
+//function to save output to file
 void saveOutput(float *ii, int rows, int cols, string filename, double t){
 
 	ofstream outputFile;
@@ -36,27 +37,23 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 	outputFile.close();
 }
 
-//function to calculate row cumulative sums
-__global__ void cumulativeRowPass(int rows, int cols, float *ii)
+//kernel to transpose - copy the array to another one
+__global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 {
-	//get row
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	if(i < rows){
-		//get row index
-		int row_index = i * cols;
-		//for each column
-		for(int j=0; j < cols; j++){
-			//get index from array
-			int index = row_index + j;
-			//get previous value
-			int prev_val = (j==0) ? 0 : ii[index-1];
-			ii[index] = prev_val + ii[index];
-		}
+	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	//get source
+	int ij = i * cols + j;
+	//get destination
+	int ji = j * cols + i;
+	if(i < cols && j < rows){
+		//fill transpose array
+		transpose[ji] = ii[ij];
 	}
 }
 
-//function to calculate column cumulative sums
-__global__ void cumulativeColumnPass(int rows, int cols, float *ii)
+//kernel to calculate cumulative sums - top to bottom
+__global__ void cumulativePass(int rows, int cols, float *ii)
 {
 	//get column index
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -111,7 +108,6 @@ int main(int argc, char *argv[])
 	const int size = rows * cols * sizeof(float);
 	//initialise arrays
 	float *ii;
-	//allocate memory to host with write combined flag
 	cudaHostAlloc((void**)&ii, size, cudaHostAllocWriteCombined);
 
 	//fill array from image
@@ -121,8 +117,12 @@ int main(int argc, char *argv[])
 		}
 	}
 
+
 	float* dii;
+	float* transpose;
+	//Allocate device memory for the 2 arrays
 	cudaMalloc((void**)&dii, size);
+	cudaMalloc((void**)&transpose, size);
 
 	double totalTime = 0;
 	// start timer
@@ -136,18 +136,24 @@ int main(int argc, char *argv[])
 	printf("Time taken to copy from host to device: %fs\n", t);
 	totalTime += t;
 
-
+	//determine structure for blocks and grids for the kernels
 	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
-	printf("Number of threads in blocks: %d\n", threadsInBlocks);
-	printf("Number of blocks: %d\n", nblocks);
+	dim3 blocksize(16, 16);
+	dim3 gridsize( (cols + blocksize.x - 1) / blocksize.x, (rows + blocksize.y - 1) / blocksize.y);
+	printf("Number of threads in blocks for cumulative pass: %d\n", threadsInBlocks);
+	printf("Number of blocks for cumulative pass: %d\n", nblocks);
+	printf("Block size for transpose copy: %d x %d\n", blocksize.x, blocksize.y);
+	printf("Grid size for transpose copy: %d x %d\n", gridsize.x, gridsize.y);
 
 	// start timer
 	t = jbutil::gettime();
 
 	//start kernels
-	cumulativeRowPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
-	cumulativeColumnPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
+	cumulativePass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
+	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, dii, transpose);
+	cumulativePass<<<nblocks, threadsInBlocks>>>(rows, cols, transpose);
+	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, transpose, dii);
 
 	// stop timer
 	t = jbutil::gettime() - t;
@@ -171,8 +177,10 @@ int main(int argc, char *argv[])
 
 	printf("Total time taken: %fs\n", totalTime);
 
+	//free host memory
 	cudaFreeHost(ii);
 	//free device memory
 	cudaFree(dii);
+	cudaFree(transpose);
 
 }

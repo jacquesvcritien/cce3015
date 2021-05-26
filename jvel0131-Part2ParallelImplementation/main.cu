@@ -1,4 +1,3 @@
-
 using namespace std;
 #include <cassert>
 #include <array>
@@ -32,24 +31,26 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 }
 
 //function to calculate row cumulative sums
-__global__ void cumulativeRowPass(int rows, int cols, float *ii, const float *a)
+__global__ void cumulativeRowPass(int rows, int cols, float *ii)
 {
 	//get row
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < rows){
+		//get row index
+		int row_index = i * cols;
 		//for each column
 		for(int j=0; j < cols; j++){
 			//get index from array
-			int index = i * cols + j;
+			int index = row_index + j;
 			//get previous value
-			float prev_val = (j==0) ? 0 : ii[index-1];
-			ii[index] = prev_val + a[index];
+			int prev_val = (j==0) ? 0 : ii[index-1];
+			ii[index] = prev_val + ii[index];
 		}
 	}
 }
 
 //function to calculate column cumulative sums
-__global__ void cumulativeColumnPass(int rows, int cols, float *ii, const float *a)
+__global__ void cumulativeColumnPass(int rows, int cols, float *ii)
 {
 	//get column index
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
@@ -103,57 +104,50 @@ int main(int argc, char *argv[])
 
 	const int size = rows * cols * sizeof(float);
 	//initialise arrays
-	float *a, *ii;
-	a=(float*)malloc(size);	
-	ii=(float*)malloc(size);	
+	float *ii;
+	ii=(float*)malloc(size);
 
 	//fill array from image
 	for(int row=0; row < rows; row++){
 		for (int col=0; col < cols; col++){
-			a[row * cols +  col] = image_in(0, row, col);
-			ii[row * cols + col] = 0;
+			ii[row * cols + col] = image_in(0, row, col);
 		}
 	}
 
-	//Allocate memory on device
-	float *da, *dii;
-	cudaMalloc((void**)&da, size);
+	//initialise device memory
+	float *dii;
 	cudaMalloc((void**)&dii, size);
 
-	//holds total time
 	double totalTime = 0;
 	// start timer
 	double t = jbutil::gettime();
 
 	// Copy over input from host to device
-	cudaMemcpy(da, a, size, cudaMemcpyHostToDevice);
 	cudaMemcpy(dii, ii, size, cudaMemcpyHostToDevice);
 
 	// stop timer
 	t = jbutil::gettime() - t;
-	totalTime += t;
 	printf("Time taken to copy from host to device: %fs\n", t);
-
-	//free memory for original array
-	free(a);
+	totalTime += t;
 
 	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
 	printf("Number of threads in blocks: %d\n", threadsInBlocks);
 	printf("Number of blocks: %d\n", nblocks);
 
-	//start timer
+	// start timer
 	t = jbutil::gettime();
 
 	//start kernels
-	cumulativeRowPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii, da);
-	cumulativeColumnPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii, da);
+	cumulativeColumnPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
+	cumulativeRowPass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
 
 	// stop timer
 	t = jbutil::gettime() - t;
 	printf("Time taken to calculate integral image: %fs\n", t);
 	totalTime += t;
 
+	// start timer
 	t = jbutil::gettime();
 
 	// Copy over output from device to host
@@ -164,7 +158,6 @@ int main(int argc, char *argv[])
 	printf("Time taken to copy from device to host: %fs\n", t);
 	totalTime += t;
 
-
 	//output to file if save is true
 	if(save){
 		saveOutput(ii, rows, cols, filename, totalTime);
@@ -172,10 +165,9 @@ int main(int argc, char *argv[])
 
 	printf("Total time taken: %fs\n", totalTime);
 
-	//free host memory
+	//free memory on host
 	free(ii);
 	//free device memory
-	cudaFree(da);
 	cudaFree(dii);
 
 }
