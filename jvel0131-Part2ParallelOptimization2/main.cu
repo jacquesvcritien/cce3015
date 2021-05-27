@@ -56,8 +56,6 @@ __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 //kernel to calculate cumulative sums - top to bottom
 __global__ void cumulativePass(int rows, int cols, float *ii)
 {
-
-	printf("In cumulative matrix\n");
 	//get column index
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < cols){
@@ -69,6 +67,7 @@ __global__ void cumulativePass(int rows, int cols, float *ii)
 			int prev_index = index - cols;
 			//get previous value
 			float prev_val = (j==0) ? 0 : ii[prev_index];
+			printf("At position (%d, %d) = %f\n", j, i, ii[index]);
 			ii[index] = prev_val + ii[index];
 		}
 	}
