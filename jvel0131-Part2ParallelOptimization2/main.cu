@@ -48,6 +48,7 @@ __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 	//get destination
 	int ji = j * cols + i;
 	if(i < cols && j < rows){
+		printf("At position (%d, %d) = %d\n", j, i, ii[ij]);
 		//fill transpose array
 		transpose[ji] = ii[ij];
 	}
