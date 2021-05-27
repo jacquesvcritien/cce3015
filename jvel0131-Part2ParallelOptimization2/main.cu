@@ -140,7 +140,7 @@ int main(int argc, char *argv[])
 	//determine structure for blocks and grids for the kernels
 	int threadsInBlocks = 128;
 	const int nblocks = (rows + (threadsInBlocks-1)) / threadsInBlocks;
-	dim3 blocksize(16, 16);
+	dim3 blocksize(32, 32);
 	dim3 gridsize( (cols + blocksize.x - 1) / blocksize.x, (rows + blocksize.y - 1) / blocksize.y);
 	printf("Number of threads in blocks for cumulative pass: %d\n", threadsInBlocks);
 	printf("Number of blocks for cumulative pass: %d\n", nblocks);
