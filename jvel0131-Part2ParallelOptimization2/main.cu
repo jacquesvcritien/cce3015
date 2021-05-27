@@ -40,6 +40,7 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 //kernel to transpose - copy the array to another one
 __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 {
+	printf("In transpose matrix\n");
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	//get source
@@ -55,6 +56,8 @@ __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 //kernel to calculate cumulative sums - top to bottom
 __global__ void cumulativePass(int rows, int cols, float *ii)
 {
+
+	printf("In cumulative matrix\n");
 	//get column index
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if(i < cols){
@@ -151,9 +154,13 @@ int main(int argc, char *argv[])
 
 	//start kernels
 	cumulativePass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
+	printf("Finished pass 1\n");
 	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, dii, transpose);
+	printf("Finished transpose 1\n");
 	cumulativePass<<<nblocks, threadsInBlocks>>>(rows, cols, transpose);
+	printf("Finished pass 2\n");
 	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, transpose, dii);
+	printf("Finished transpose 2\n");
 
 	// stop timer
 	t = jbutil::gettime() - t;
