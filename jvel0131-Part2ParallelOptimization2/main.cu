@@ -42,15 +42,13 @@ __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
-	//get source
-	int ij = i * rows + j;
 	//get destination
+	int ij = i * rows + j;
+	//get source
 	int ji = j * cols + i;
 	if(i < cols && j < rows){
-		printf("TRANSPOSE BEFORE: At position (%d, %d) = %f\n", j, i, ii[ji]);
 		//fill transpose array
 		transpose[ij] = ii[ji];
-		printf("TRANSPOSE AFTER: At position (%d, %d) = %f\n", i, j, transpose[ij]);
 	}
 }
 
@@ -68,9 +66,7 @@ __global__ void cumulativePass(int rows, int cols, float *ii)
 			int prev_index = index - cols;
 			//get previous value
 			float prev_val = (j==0) ? 0 : ii[prev_index];
-			printf("PASS: At position (%d, %d) = %f\n", j, i, ii[index]);
 			ii[index] = prev_val + ii[index];
-			printf("AFTER: At position (%d, %d) = %f\n", j, i, ii[index]);
 
 		}
 	}
@@ -156,13 +152,9 @@ int main(int argc, char *argv[])
 
 	//start kernels
 	cumulativePass<<<nblocks, threadsInBlocks>>>(rows, cols, dii);
-	printf("Finished pass 1\n");
 	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, dii, transpose);
-	printf("Finished transpose 1\n");
 	cumulativePass<<<nblocks, threadsInBlocks>>>(cols, rows, transpose);
-	printf("Finished pass 2\n");
 	TransposeMatrix<<<gridsize, blocksize>>>(cols, rows, transpose, dii);
-	printf("Finished transpose 2\n");
 
 	// stop timer
 	t = jbutil::gettime() - t;
