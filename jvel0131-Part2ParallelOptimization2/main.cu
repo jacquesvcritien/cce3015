@@ -69,6 +69,8 @@ __global__ void cumulativePass(int rows, int cols, float *ii)
 			float prev_val = (j==0) ? 0 : ii[prev_index];
 			printf("PASS: At position (%d, %d) = %f\n", j, i, ii[index]);
 			ii[index] = prev_val + ii[index];
+			printf("AFTER: At position (%d, %d) = %f\n", j, i, ii[index]);
+
 		}
 	}
 }
