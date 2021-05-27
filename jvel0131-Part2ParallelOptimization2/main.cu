@@ -43,7 +43,7 @@ __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	//get source
-	int ij = i * cols + j;
+	int ij = i * rows + j;
 	//get destination
 	int ji = j * cols + i;
 	if(i < cols && j < rows){
