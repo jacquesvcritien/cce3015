@@ -40,7 +40,6 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 //kernel to transpose - copy the array to another one
 __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 {
-	printf("In transpose matrix\n");
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
 	//get source
@@ -48,7 +47,7 @@ __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 	//get destination
 	int ji = j * cols + i;
 	if(i < cols && j < rows){
-		printf("At position (%d, %d) = %d\n", j, i, ii[ij]);
+		printf("At position (%d, %d) = %f\n", j, i, ii[ij]);
 		//fill transpose array
 		transpose[ji] = ii[ij];
 	}
