@@ -40,8 +40,8 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 //kernel to transpose - copy the array to another one
 __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 {
-	int i = blockIdx.x * blockDim.x + threadIdx.x;
-	int j = blockIdx.y * blockDim.y + threadIdx.y;
+	int j = blockIdx.x * blockDim.x + threadIdx.x;
+	int i = blockIdx.y * blockDim.y + threadIdx.y;
 	//get source
 	int ij = i * cols + j;
 	//get destination
