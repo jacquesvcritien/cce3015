@@ -159,9 +159,9 @@ int main(int argc, char *argv[])
 	printf("Finished pass 1\n");
 	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, dii, transpose);
 	printf("Finished transpose 1\n");
-	cumulativePass<<<nblocks, threadsInBlocks>>>(rows, cols, transpose);
+	cumulativePass<<<nblocks, threadsInBlocks>>>(cols, rows, transpose);
 	printf("Finished pass 2\n");
-	TransposeMatrix<<<gridsize, blocksize>>>(rows, cols, transpose, dii);
+	TransposeMatrix<<<gridsize, blocksize>>>(cols, rows, transpose, dii);
 	printf("Finished transpose 2\n");
 
 	// stop timer
