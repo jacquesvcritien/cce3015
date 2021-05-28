@@ -40,16 +40,38 @@ void saveOutput(float *ii, int rows, int cols, string filename, double t){
 //kernel to transpose - copy the array to another one
 __global__ void TransposeMatrix(int rows, int cols, float *ii, float *transpose)
 {
+	//same size as grid
+	__shared__ float sharedBetweenThreads[16][16];
+
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	int j = blockIdx.y * blockDim.y + threadIdx.y;
+
 	//get destination
-	int ij = i * rows + j;
+	int dest = i * rows + j;
 	//get source
-	int ji = j * cols + i;
+	int src = j * cols + i;
+
 	if(i < cols && j < rows){
-		//fill transpose array
-		transpose[ij] = ii[ji];
+		//store to shared
+		sharedBetweenThreads[threadIdx.y][threadIdx.x] = ii[src];
+
+		//synchronize threads
+		__syncthreads();
+
+		transpose[dest] = sharedBetweenThreads[threadIdx.x][threadIdx.y];
 	}
+
+//	int i = blockIdx.x * blockDim.x + threadIdx.x;
+//	int j = blockIdx.y * blockDim.y + threadIdx.y;
+//	//get destination
+//	int ij = i * rows + j;
+//	//get source
+//	int ji = j * cols + i;
+//
+//	if(i < cols && j < rows){
+//		//fill transpose array
+//		transpose[ij] = ii[ji];
+//	}
 }
 
 //kernel to calculate cumulative sums - top to bottom
