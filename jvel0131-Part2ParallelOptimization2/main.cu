@@ -63,10 +63,8 @@ __global__ void cumulativePass(int rows, int cols, float *ii)
 		for(int j=0; j < rows; j++){
 			//get index from array
 			int index = j * cols + i;
-			//get previous index
-			int prev_index = index - cols;
 			//get previous value
-			float prev_val = (j==0) ? 0 : ii[prev_index];
+			float prev_val = (j==0) ? 0 : ii[index - cols];
 			ii[index] = prev_val + ii[index];
 
 		}
